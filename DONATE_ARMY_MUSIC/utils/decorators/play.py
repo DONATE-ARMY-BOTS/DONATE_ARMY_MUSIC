@@ -1,5 +1,5 @@
 import asyncio
-
+from pyrogram import Client
 from pyrogram.enums import ChatMemberStatus
 from pyrogram.errors import (
     ChatAdminRequired,
@@ -7,68 +7,61 @@ from pyrogram.errors import (
     UserAlreadyParticipant,
     UserNotParticipant,
 )
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from config import PLAYLIST_IMG_URL, SUPPORT_CHAT, adminlist
 from strings import get_string
 from DONATE_ARMY_MUSIC import YouTube, app
 from DONATE_ARMY_MUSIC.misc import SUDOERS
 from DONATE_ARMY_MUSIC.utils.database import (
-    get_assistant,
     get_cmode,
     get_lang,
     get_playmode,
     get_playtype,
+    get_assistant,
     is_active_chat,
-    is_maintenance,
+    is_served_private_chat
 )
+
+from DONATE_ARMY_MUSIC.utils.database import is_maintenance
 from DONATE_ARMY_MUSIC.utils.inline.playlist import botplaylist_markup
 
-links = {}
 clinks = {}
 
 
 def PlayWrapper(command):
     async def wrapper(client, message):
-        language = await get_lang(message.chat.id)
-        _ = get_string(language)
-        if message.sender_chat:
-            upl = InlineKeyboardMarkup(
-                [
-                    [
-                        InlineKeyboardButton(
-                            text="ʜᴏᴡ ᴛᴏ ғɪx ?",
-                            callback_data="AnonymousAdmin",
-                        ),
-                    ]
-                ]
-            )
-            return await message.reply_text(_["general_3"], reply_markup=upl)
-
         if await is_maintenance() is False:
             if message.from_user.id not in SUDOERS:
                 return await message.reply_text(
-                    text=f"{app.mention} ɪs ᴜɴᴅᴇʀ ᴍᴀɪɴᴛᴇɴᴀɴᴄᴇ, ᴠɪsɪᴛ <a href={SUPPORT_CHAT}>sᴜᴘᴘᴏʀᴛ ᴄʜᴀᴛ</a> ғᴏʀ ᴋɴᴏᴡɪɴɢ ᴛʜᴇ ʀᴇᴀsᴏɴ.",
-                    disable_web_page_preview=True,
+                    "» ʙᴏᴛ ɪs ᴜɴᴅᴇʀ ᴍᴀɪɴᴛᴇɴᴀɴᴄᴇ ғᴏʀ sᴏᴍᴇ ᴛɪᴍᴇ, ᴩʟᴇᴀsᴇ ᴠɪsɪᴛ sᴜᴩᴩᴏʀᴛ ᴄʜᴀᴛ ᴛᴏ ᴋɴᴏᴡ ᴛʜᴇ ʀᴇᴀsᴏɴ..."
                 )
-
-        try:
-            await message.delete()
-        except:
-            pass
-
+        
+        
+        language = await get_lang(message.chat.id)
+        _ = get_string(language)
         audio_telegram = (
-            (message.reply_to_message.audio or message.reply_to_message.voice)
+            (
+                message.reply_to_message.audio
+                or message.reply_to_message.voice
+            )
             if message.reply_to_message
             else None
         )
         video_telegram = (
-            (message.reply_to_message.video or message.reply_to_message.document)
+            (
+                message.reply_to_message.video
+                or message.reply_to_message.document
+            )
             if message.reply_to_message
             else None
         )
         url = await YouTube.url(message)
-        if audio_telegram is None and video_telegram is None and url is None:
+        if (
+            audio_telegram is None
+            and video_telegram is None
+            and url is None
+        ):
             if len(message.command) < 2:
                 if "stream" in message.command:
                     return await message.reply_text(_["str_1"])
@@ -78,6 +71,20 @@ def PlayWrapper(command):
                     caption=_["playlist_1"],
                     reply_markup=InlineKeyboardMarkup(buttons),
                 )
+        if message.sender_chat:
+            upl = InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(
+                            text="ʜᴏᴡ ᴛᴏ ғɪx ᴛʜɪs ?",
+                            callback_data="AnonymousAdmin",
+                        ),
+                    ]
+                ]
+            )
+            return await message.reply_text(
+                _["general_4"], reply_markup=upl
+            )
         if message.command[0][0] == "c":
             chat_id = await get_cmode(message.chat.id)
             if chat_id is None:
@@ -113,74 +120,6 @@ def PlayWrapper(command):
             fplay = True
         else:
             fplay = None
-
-        if not await is_active_chat(chat_id):
-            userbot = await get_assistant(chat_id)
-            try:
-                try:
-                    get = await app.get_chat_member(chat_id, userbot.username)
-                except ChatAdminRequired:
-                    return await message.reply_text(_["call_1"])
-                if (
-                    get.status == ChatMemberStatus.BANNED
-                    or get.status == ChatMemberStatus.RESTRICTED
-                ):
-                    return await message.reply_text(
-                        _["call_2"].format(
-                            app.mention, userbot.id, userbot.name, userbot.username
-                        )
-                    )
-            except UserNotParticipant:
-                if chat_id in links:
-                    invitelink = links[chat_id]
-                else:
-                    if message.chat.username:
-                        invitelink = message.chat.username
-                        try:
-                            await userbot.resolve_peer(invitelink)
-                        except:
-                            pass
-                    else:
-                        try:
-                            invitelink = await app.export_chat_invite_link(chat_id)
-                        except ChatAdminRequired:
-                            return await message.reply_text(_["call_1"])
-                        except Exception as e:
-                            return await message.reply_text(
-                                _["call_3"].format(app.mention, type(e).__name__)
-                            )
-
-                if invitelink.startswith("https://t.me/+"):
-                    invitelink = invitelink.replace(
-                        "https://t.me/+", "https://t.me/joinchat/"
-                    )
-                myu = await message.reply_text(_["call_4"].format(app.mention))
-                try:
-                    await asyncio.sleep(1)
-                    await userbot.join_chat(invitelink)
-                except InviteRequestSent:
-                    try:
-                        await app.approve_chat_join_request(chat_id, userbot.id)
-                    except Exception as e:
-                        return await message.reply_text(
-                            _["call_3"].format(app.mention, type(e).__name__)
-                        )
-                    await asyncio.sleep(3)
-                    await myu.edit(_["call_5"].format(app.mention))
-                except UserAlreadyParticipant:
-                    pass
-                except Exception as e:
-                    return await message.reply_text(
-                        _["call_3"].format(app.mention, type(e).__name__)
-                    )
-
-                links[chat_id] = invitelink
-
-                try:
-                    await userbot.resolve_peer(chat_id)
-                except:
-                    pass
-
         return await command(
             client,
             message,
@@ -194,7 +133,6 @@ def PlayWrapper(command):
         )
 
     return wrapper
-
 
 def CPlayWrapper(command):
     async def wrapper(client, message):
@@ -289,12 +227,12 @@ def CPlayWrapper(command):
                 try:
                     get = await client.get_chat_member(chat_id, userbot.username)
                 except ChatAdminRequired:
-                    await message.reply_text(_["call_1"])
+                    return await message.reply_text(_["call_1"])
                 if (
                     get.status == ChatMemberStatus.BANNED
                     or get.status == ChatMemberStatus.RESTRICTED
                 ):
-                    await message.reply_text(
+                    return await message.reply_text(
                         _["call_2"].format(
                             i.mention, userbot.id, userbot.name, userbot.username
                         )
@@ -313,9 +251,9 @@ def CPlayWrapper(command):
                         try:
                             invitelink = await client.export_chat_invite_link(chat_id)
                         except ChatAdminRequired:
-                            await message.reply_text(_["call_1"])
+                            return await message.reply_text(_["call_1"])
                         except Exception as e:
-                            await message.reply_text(
+                            return await message.reply_text(
                                 _["call_3"].format(i.mention, type(e).__name__)
                             )
 
@@ -331,7 +269,7 @@ def CPlayWrapper(command):
                     try:
                         await client.approve_chat_join_request(chat_id, userbot.id)
                     except Exception as e:
-                        await message.reply_text(
+                        return await message.reply_text(
                             _["call_3"].format(i.mention, type(e).__name__)
                         )
                     await asyncio.sleep(3)
@@ -339,7 +277,7 @@ def CPlayWrapper(command):
                 except UserAlreadyParticipant:
                     pass
                 except Exception as e:
-                    await message.reply_text(
+                    return await message.reply_text(
                         _["call_3"].format(i.mention, type(e).__name__)
                     )
 
