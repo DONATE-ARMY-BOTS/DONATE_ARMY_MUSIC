@@ -1,20 +1,22 @@
 import asyncio
+from typing import Dict, List, Union
 
-from pyrogram import filters, Client
+from pyrogram import Client, filters
 from pyrogram.enums import ChatMembersFilter
 from pyrogram.errors import FloodWait
 
-from DONATE_ARMY_MUSIC import app
+from config import adminlist
+from DONATE_ARMY_MUSIC.core.mongo import mongodb, pymongodb
 from DONATE_ARMY_MUSIC.misc import SUDOERS
-from DONATE_ARMY_MUSIC.utils.database import get_client, get_served_chats_clone, get_served_users_clone
+from DONATE_ARMY_MUSIC.utils.database import (
+    get_client,
+    get_served_chats,
+    get_served_users,
+    get_served_chats_clone,
+    get_served_users,
+)
 from DONATE_ARMY_MUSIC.utils.decorators.language import language
 from DONATE_ARMY_MUSIC.utils.formatters import alpha_to_int
-from config import adminlist
-import random
-from typing import Dict, List, Union
-
-from DONATE_ARMY_MUSIC import userbot
-from DONATE_ARMY_MUSIC.core.mongo import mongodb, pymongodb
 
 authdb = mongodb.adminauth
 authuserdb = mongodb.authuser
@@ -62,6 +64,7 @@ suggestion = {}
 mute = {}
 audio = {}
 video = {}
+
 
 async def get_active_chats_clone() -> list:
     return active
@@ -129,7 +132,8 @@ async def delete_authuser_clone(chat_id: int, name: str) -> bool:
         )
         return True
     return False
-    
+
+
 IS_BROADCASTING = False
 
 
@@ -164,7 +168,7 @@ async def braodcast_message(client, message, _):
         sent = 0
         pin = 0
         chats = []
-        schats = await get_served_chats_clone()
+        schats = await get_served_chats_clone() and await get_served_chats()
         for chat in schats:
             chats.append(int(chat["chat_id"]))
         for i in chats:
@@ -203,7 +207,7 @@ async def braodcast_message(client, message, _):
     if "-user" in message.text:
         susr = 0
         served_users = []
-        susers = await get_served_users_clone()
+        susers = await get_served_users_clone() and await get_served_users()
         for user in susers:
             served_users.append(int(user["user_id"]))
         for i in served_users:
@@ -237,10 +241,10 @@ async def braodcast_message(client, message, _):
             clients = await get_client(num)
             async for dialog in clients.get_dialogs():
                 try:
-                    await clients.forward_messages(
-                        dialog.chat.id, y, x
-                    ) if message.reply_to_message else await clients.send_message(
-                        dialog.chat.id, text=query
+                    (
+                        await clients.forward_messages(dialog.chat.id, y, x)
+                        if message.reply_to_message
+                        else await clients.send_message(dialog.chat.id, text=query)
                     )
                     sent += 1
                     await asyncio.sleep(3)
@@ -262,7 +266,7 @@ async def braodcast_message(client, message, _):
 async def auto_clean():
     while not await asyncio.sleep(10):
         try:
-            served_chats = await get_active_chats_clone()
+            served_chats = await get_active_chats()
             for chat_id in served_chats:
                 if chat_id not in adminlist:
                     adminlist[chat_id] = []
