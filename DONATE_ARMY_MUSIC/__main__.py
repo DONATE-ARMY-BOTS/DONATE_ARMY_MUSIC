@@ -5,12 +5,7 @@ from pyrogram import idle
 
 import config
 from config import BANNED_USERS
-from DONATE_ARMY_MUSIC import (
-    HELPABLE,
-    LOGGER,
-    app,
-    userbot,
-)
+from DONATE_ARMY_MUSIC import HELPABLE, LOGGER, app, userbot
 from DONATE_ARMY_MUSIC.core.call import VIP
 from DONATE_ARMY_MUSIC.misc import sudo
 from DONATE_ARMY_MUSIC.plugins import ALL_MODULES
@@ -31,6 +26,7 @@ async def init():
         )
 
     await sudo()
+
     try:
         users = await get_gbanned()
         for user_id in users:
@@ -47,7 +43,12 @@ async def init():
 
         if hasattr(imported_module, "__MODULE__") and imported_module.__MODULE__:
             if hasattr(imported_module, "__HELP__") and imported_module.__HELP__:
-                HELPABLE[imported_module.__MODULE__.lower()] = imported_module
+                if imported_module.__MODULE__.lower() not in HELPABLE:
+                    HELPABLE[imported_module.__MODULE__.lower()] = imported_module
+                else:
+                    raise Exception(
+                        f"Can't have two plugins with same name! '{imported_module.__MODULE__}' Please Change One"
+                    )
 
     LOGGER("DONATE_ARMY_MUSIC.plugins").info("𝐀𝐥𝐥 𝐅𝐞𝐚𝐭𝐮𝐫𝐞𝐬 𝐋𝐨𝐚𝐝𝐞𝐝 𝐁𝐚𝐛𝐲🥳...")
 
