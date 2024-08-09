@@ -3,7 +3,7 @@ from pyrogram.types import InlineKeyboardMarkup, Message
 
 import config
 from config import BANNED_USERS
-from DONATE_ARMY_MUSIC import YouTube, app
+from DONATE_ARMY_MUSIC import YouTube, app, YTB
 from DONATE_ARMY_MUSIC.core.call import VIP
 from DONATE_ARMY_MUSIC.misc import db
 from DONATE_ARMY_MUSIC.utils.database import get_loop
@@ -143,7 +143,15 @@ async def skip(cli, message: Message, _, chat_id):
                 video=status,
             )
         except:
-            return await mystic.edit_text(_["call_6"])
+            try:
+                file_path, direct = await YTB.download(
+                    videoid,
+                    mystic,
+                    videoid=True,
+                    video=status,
+                )
+            except:
+                return await mystic.edit_text(_["call_6"])
         try:
             image = await YouTube.thumbnail(videoid, True)
         except:

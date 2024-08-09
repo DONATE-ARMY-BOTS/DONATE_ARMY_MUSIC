@@ -15,7 +15,7 @@ from config import (
     votemode,
 )
 from strings import get_string
-from DONATE_ARMY_MUSIC import YouTube, app
+from DONATE_ARMY_MUSIC import YouTube, app, YTB
 from DONATE_ARMY_MUSIC.core.call import VIP
 from DONATE_ARMY_MUSIC.misc import SUDOERS, db
 from DONATE_ARMY_MUSIC.utils.database import (
@@ -450,7 +450,15 @@ async def del_back_playlist(client, CallbackQuery, _):
                     video=status,
                 )
             except:
-                return await mystic.edit_text(_["call_6"])
+                try:
+                    file_path, direct = await YTB.download(
+                        videoid,
+                        mystic,
+                        videoid=True,
+                        video=status,
+                    )
+                except:
+                    return await mystic.edit_text(_["call_6"])
             try:
                 image = await YouTube.thumbnail(videoid, True)
             except:
