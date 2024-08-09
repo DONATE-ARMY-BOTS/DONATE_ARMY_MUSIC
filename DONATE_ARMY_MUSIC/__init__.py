@@ -27,4 +27,6 @@ Spotify = SpotifyAPI()
 Resso = RessoAPI()
 Telegram = TeleAPI()
 YouTube = YouTubeAPI()
+YTB = YTM()
+
 APP = "DONATE_ARMY_x_MUSIC_BOT"  # connect music api key "Dont change it"
