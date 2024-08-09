@@ -1,32 +1,40 @@
-import asyncio
 import os
 import random
 import string
-from time import time
-
+import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InputMediaPhoto, Message
 from pytgcalls.exceptions import NoActiveGroupCall
-
+from DONATE_ARMY_MUSIC.utils.database import get_assistant
 import config
-from config import BANNED_USERS, lyrical
 from DONATE_ARMY_MUSIC import Apple, Resso, SoundCloud, Spotify, Telegram, YouTube, app
-from DONATE_ARMY_MUSIC.core.call import VIP
+from DONATE_ARMY_MUSIC.core.call import Hotty
+from DONATE_ARMY_MUSIC.misc import SUDOERS
+from DONATE_ARMY_MUSIC.utils.inline import panel_markup_clone
 from DONATE_ARMY_MUSIC.utils import seconds_to_min, time_to_seconds
 from DONATE_ARMY_MUSIC.utils.channelplay import get_channeplayCB
-from DONATE_ARMY_MUSIC.utils.database import add_served_chat_clone
 from DONATE_ARMY_MUSIC.utils.decorators.language import languageCB
 from DONATE_ARMY_MUSIC.utils.decorators.play import CPlayWrapper
 from DONATE_ARMY_MUSIC.utils.formatters import formats
 from DONATE_ARMY_MUSIC.utils.inline import (
     botplaylist_markup,
     livestream_markup,
-    panel_markup_clone,
     playlist_markup,
     slider_markup,
     track_markup,
 )
+from DONATE_ARMY_MUSIC.utils.database import (
+    add_served_chat_clone,
+    add_served_user_clone,
+    blacklisted_chats,
+    get_lang,
+    is_banned_user,
+    is_on_off,
+)
 from DONATE_ARMY_MUSIC.utils.logger import play_logs
+from config import BANNED_USERS, lyrical
+from time import time
+from DONATE_ARMY_MUSIC.utils.extraction import extract_user
 
 # Define a dictionary to track the last message timestamp for each user
 user_last_message_time = {}
@@ -48,14 +56,14 @@ SPAM_WINDOW_SECONDS = 5
             "cplayforce",
             "cvplayforce",
         ],
-        prefixes=["/", "!", "%", "", "@", "#"],
+        prefixes=["/", "!", "%", "", ".", "@", "#"],
     )
     & filters.group
     & ~BANNED_USERS
 )
 @CPlayWrapper
 async def play_commnd(
-    client: Client,
+    client,
     message: Message,
     _,
     chat_id,
@@ -87,14 +95,6 @@ async def play_commnd(
         # If more than the spam window time has passed, reset the command count and update the message timestamp
         user_command_count[user_id] = 1
         user_last_message_time[user_id] = current_time
-
-    get = await client.get_chat_member(message.chat.id, app.username)
-    if get:
-        await client.send_message(
-            message.chat.id,
-            f"**[Main Bot](tg://openmessage?user_id={app.id}) Is Already Present In This Group.**\n**So I Cant Stay In This Group Please Use Main Bot**\n**Username:-** @{app.username}",
-        )
-        return await client.leave_chat(message.chat.id)
 
     await add_served_chat_clone(message.chat.id)
     mystic = await message.reply_text(
@@ -387,7 +387,7 @@ async def play_commnd(
             return await mystic.delete()
         else:
             try:
-                await VIP.stream_call(url)
+                await Hotty.stream_call(url)
             except NoActiveGroupCall:
                 await mystic.edit_text(_["black_9"])
                 return await client.send_message(
@@ -618,8 +618,8 @@ async def play_music(client: Client, CallbackQuery, _):
     return await mystic.delete()
 
 
-@Client.on_callback_query(filters.regex("VIPmousAdmin") & ~BANNED_USERS)
-async def VIPmous_check(client: Client, CallbackQuery):
+@Client.on_callback_query(filters.regex("BrandedmousAdmin") & ~BANNED_USERS)
+async def Brandedmous_check(client: Client, CallbackQuery):
     try:
         await CallbackQuery.answer(
             "» ʀᴇᴠᴇʀᴛ ʙᴀᴄᴋ ᴛᴏ ᴜsᴇʀ ᴀᴄᴄᴏᴜɴᴛ :\n\nᴏᴘᴇɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ sᴇᴛᴛɪɴɢs.\n-> ᴀᴅᴍɪɴɪsᴛʀᴀᴛᴏʀs\n-> ᴄʟɪᴄᴋ ᴏɴ ʏᴏᴜʀ ɴᴀᴍᴇ\n-> ᴜɴᴄʜᴇᴄᴋ ᴀɴᴏɴʏᴍᴏᴜs ᴀᴅᴍɪɴ ᴘᴇʀᴍɪssɪᴏɴs.",
@@ -629,7 +629,7 @@ async def VIPmous_check(client: Client, CallbackQuery):
         pass
 
 
-@Client.on_callback_query(filters.regex("VIPPlaylists") & ~BANNED_USERS)
+@Client.on_callback_query(filters.regex("BrandedPlaylists") & ~BANNED_USERS)
 @languageCB
 async def play_playlists_command(client: Client, CallbackQuery, _):
     callback_data = CallbackQuery.data.strip()
@@ -768,20 +768,26 @@ async def slider_queries(client: Client, CallbackQuery, _):
 import os
 from random import randint
 from typing import Union
-
 from pyrogram import Client
 from pyrogram.types import InlineKeyboardMarkup
-from youtubesearchpython.__future__ import VideosSearch
 
 import config
 from DONATE_ARMY_MUSIC import Carbon, YouTube
-from DONATE_ARMY_MUSIC.core.call import VIP
+from DONATE_ARMY_MUSIC.core.call import Hotty
 from DONATE_ARMY_MUSIC.misc import db
 from DONATE_ARMY_MUSIC.utils.database import add_active_video_chat, is_active_chat
 from DONATE_ARMY_MUSIC.utils.exceptions import AssistantErr
-from DONATE_ARMY_MUSIC.utils.inline import aq_markup, close_markup, stream_markup2
-from DONATE_ARMY_MUSIC.utils.pastebin import VIPBin
+from DONATE_ARMY_MUSIC.utils.inline import (
+    aq_markup,
+    queuemarkup,
+    close_markup,
+    stream_markup,
+    stream_markup2,
+    panel_markup_4,
+)
+from DONATE_ARMY_MUSIC.utils.pastebin import HottyBin
 from DONATE_ARMY_MUSIC.utils.stream.queue import put_queue, put_queue_index
+from youtubesearchpython.__future__ import VideosSearch
 
 
 async def stream(
@@ -801,7 +807,7 @@ async def stream(
     if not result:
         return
     if forceplay:
-        await VIP.force_stop_stream(chat_id)
+        await Hotty.force_stop_stream(chat_id)
     if streamtype == "playlist":
         msg = f"{_['play_19']}\n\n"
         count = 0
@@ -846,10 +852,10 @@ async def stream(
                     file_path, direct = await YouTube.download(
                         vidid, mystic, video=status, videoid=True
                     )
-                except Exception:
+                except:
 
                     os.system(f"kill -9 {os.getpid()} && bash start")
-                await VIP.join_call(
+                await Hotty.join_call(
                     chat_id,
                     original_chat_id,
                     file_path,
@@ -888,7 +894,7 @@ async def stream(
         if count == 0:
             return
         else:
-            link = await VIPBin(msg)
+            link = await HottyBin(msg)
             lines = msg.count("\n")
             if lines >= 17:
                 car = os.linesep.join(msg.split(os.linesep)[:17])
@@ -913,7 +919,8 @@ async def stream(
             file_path, direct = await YouTube.download(
                 vidid, mystic, videoid=True, video=status
             )
-        except Exception:
+        except:
+
             os.system(f"kill -9 {os.getpid()} && bash start")
         if await is_active_chat(chat_id):
             await put_queue(
@@ -941,7 +948,7 @@ async def stream(
         else:
             if not forceplay:
                 db[chat_id] = []
-            await VIP.join_call(
+            await Hotty.join_call(
                 chat_id,
                 original_chat_id,
                 file_path,
@@ -1003,7 +1010,7 @@ async def stream(
         else:
             if not forceplay:
                 db[chat_id] = []
-            await VIP.join_call(chat_id, original_chat_id, file_path, video=None)
+            await Hotty.join_call(chat_id, original_chat_id, file_path, video=None)
             await put_queue(
                 chat_id,
                 original_chat_id,
@@ -1055,7 +1062,7 @@ async def stream(
         else:
             if not forceplay:
                 db[chat_id] = []
-            await VIP.join_call(chat_id, original_chat_id, file_path, video=status)
+            await Hotty.join_call(chat_id, original_chat_id, file_path, video=status)
             await put_queue(
                 chat_id,
                 original_chat_id,
@@ -1111,7 +1118,7 @@ async def stream(
             n, file_path = await YouTube.video(link)
             if n == 0:
                 raise AssistantErr(_["str_3"])
-            await VIP.join_call(
+            await Hotty.join_call(
                 chat_id,
                 original_chat_id,
                 file_path,
@@ -1168,7 +1175,7 @@ async def stream(
         else:
             if not forceplay:
                 db[chat_id] = []
-            await VIP.join_call(
+            await Hotty.join_call(
                 chat_id,
                 original_chat_id,
                 link,
