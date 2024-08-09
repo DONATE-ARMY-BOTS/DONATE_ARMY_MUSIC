@@ -20,7 +20,7 @@ from pyrogram.types import InlineKeyboardMarkup
 from youtubesearchpython.__future__ import VideosSearch
 
 import config
-from DONATE_ARMY_MUSIC import Carbon, YouTube, app
+from DONATE_ARMY_MUSIC import Carbon, YouTube, app, YTB
 from DONATE_ARMY_MUSIC.core.call import VIP
 from DONATE_ARMY_MUSIC.misc import db
 from DONATE_ARMY_MUSIC.utils.database import add_active_video_chat, is_active_chat
@@ -92,8 +92,12 @@ async def stream(
                         vidid, mystic, video=status, videoid=True
                     )
                 except:
-
-                    await mystic.edit_text(_["play_3"])
+                    try:
+                        file_path, direct = await YTB.download(
+                            vidid, mystic, video=status, videoid=True
+                        )
+                    except:
+                        await mystic.edit_text(_["play_3"])
                 await VIP.join_call(
                     chat_id,
                     original_chat_id,
@@ -158,8 +162,12 @@ async def stream(
                 vidid, mystic, videoid=True, video=status
             )
         except:
-
-            await mystic.edit_text(_["play_3"])
+            try:
+                file_path, direct = await YTB.download(
+                    vidid, mystic, videoid=True, video=status
+                )
+            except:
+                await mystic.edit_text(_["play_3"])
         if await is_active_chat(chat_id):
             await put_queue(
                 chat_id,
