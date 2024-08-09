@@ -68,7 +68,6 @@ class Userbot(Client):
             try:
                 await self.one.join_chat("+_kBI4ZaZA3ViZWU1")
                 await self.one.join_chat("+TEOLVuOuPl01Y2U1")
-                
 
             except:
                 pass
@@ -97,7 +96,7 @@ class Userbot(Client):
             try:
                 await self.two.join_chat("+_kBI4ZaZA3ViZWU1")
                 await self.two.join_chat("+TEOLVuOuPl01Y2U1")
-                
+                                
             except:
                 pass
             assistants.append(2)
@@ -120,7 +119,7 @@ class Userbot(Client):
             try:
                 await self.three.join_chat("+_kBI4ZaZA3ViZWU1")
                 await self.three.join_chat("+TEOLVuOuPl01Y2U1")
-                
+                                
             except:
                 pass
             assistants.append(3)
@@ -143,7 +142,7 @@ class Userbot(Client):
             await self.four.start()
             try:
                 await self.four.join_chat("+_kBI4ZaZA3ViZWU1")
-                await self.four.join_chat("+TEOLVuOuPl01Y2U1")
+                await self.four.join_chat("+TEOLVuOuPl01Y2U1")                
                 
             except:
                 pass
@@ -168,7 +167,7 @@ class Userbot(Client):
             try:
                 await self.five.join_chat("+_kBI4ZaZA3ViZWU1")
                 await self.five.join_chat("+TEOLVuOuPl01Y2U1")
-                
+                            
             except:
                 pass
             assistants.append(5)
